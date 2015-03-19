@@ -1,0 +1,95 @@
+<?php
+/**
+ * @Author Rodrigo Espinoza Brenes <rodrigo@estudiomanati.com>
+ * @file user_login_redirect.module
+ */
+
+/**
+ * hook_menu().
+ */
+function user_login_redirect_menu() {
+  $items = array();
+  $items['admin/configure/user-login-redirect'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('user_login_redirect_config_form',),
+    'access callback' => 'user_access',
+    'access arguments' => array('configure login redirect',),
+  );
+  return $items; 
+}
+
+/**
+ * Implements hook_permission().
+ */
+function user_login_redirect_permission() {
+  $permissions['configure login redirect'] = array(
+    'title' => t('Configure Settings for User login redirect'),
+    'description' => t('Access to configure User Login redirect'),
+    'restrict access' => TRUE,
+  );
+  return $permissions;
+} 
+
+/**
+ * Configuration form.
+ */
+function user_login_redirect_config_form($form, $form_state) {
+  $roles = user_roles(TRUE);
+  foreach ($roles as $key => $value) {
+    $form['role_redirect_weigth_' . $key] = array(
+      '#type' => 'weight',
+      '#title' => t('Weight for role '.  $value),
+      '#default_value' => variable_get('role_redirect_weigth_' . $key, ''),
+      '#description' => t('The lower weight, the more importance the role will have.'),
+    );
+    $form['role_redirect_path_' . $key] = array(
+      '#type' => 'textfield',
+      '#title' => t('Redirect path for role ' . $value),
+      '#default_value' => variable_get('role_redirect_path_' . $key, ''),
+    );
+  }
+  return system_settings_form($form);
+}
+
+
+function user_login_redirect_config_form_validate($form, &$form_state) {
+  $roles = user_roles(TRUE);
+  $data = $form_state['input'];
+  foreach($roles as $key => $value){
+    if (!empty($data['role_redirect_path_' . $key])) {
+      if (!valid_url($data['role_redirect_path_' . $key])) {
+        form_set_error('role_redirect_path_' . $key, t('You must enter a relative path for the role ' . $value));
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function user_login_redirect_user_login(&$edit, $account) {
+  $wrapper = entity_metadata_wrapper('user', $account );
+  $user_roles = $wrapper->roles->value();
+  $roles_redirect = array();
+  foreach($user_roles as $rid){
+    $roles_redirect[$rid] = array(
+      'weight' => variable_get('role_redirect_weigth_' . $rid),
+      'path' => variable_get('role_redirect_path_' . $rid, '<front>'),
+    );
+  }
+  $role_weights = array();
+  foreach ($roles_redirect as $role) {
+    $role_weights[] = $role['weight'];
+  }
+  $min_weight = min($role_weights);
+  $redirect_path = '';
+  foreach ($roles_redirect as $role) {
+    if ($role['weight'] == $min_weight) {
+      $redirect_path = $role['path'];
+    }
+  }
+  $edit['redirect'] = $redirect_path;
+  unset($_GET['destination']);
+  drupal_static_reset('drupal_get_destination');
+  drupal_get_destination();
+}
