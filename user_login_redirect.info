@@ -1,6 +1,4 @@
-name = User login Redirect 
+name = User login Redirect
 core = 7.x
 configure = admin/configure/user-login-redirect
 dependencies[] = entity
-files[] = user_login_redirect.module
-

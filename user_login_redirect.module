@@ -1,21 +1,22 @@
 <?php
 /**
- * @Author Rodrigo Espinoza Brenes <rodrigo@estudiomanati.com>
- * @file user_login_redirect.module
+ * @file
+ * user_login_redirect.module
+ * @author Rodrigo Espinoza Brenes <rodrigo@estudiomanati.com>
  */
 
 /**
- * hook_menu().
+ * Implements hook_menu().
  */
 function user_login_redirect_menu() {
   $items = array();
   $items['admin/configure/user-login-redirect'] = array(
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('user_login_redirect_config_form',),
+    'page arguments' => array('user_login_redirect_config_form'),
     'access callback' => 'user_access',
-    'access arguments' => array('configure login redirect',),
+    'access arguments' => array('configure login redirect'),
   );
-  return $items; 
+  return $items;
 }
 
 /**
@@ -28,7 +29,7 @@ function user_login_redirect_permission() {
     'restrict access' => TRUE,
   );
   return $permissions;
-} 
+}
 
 /**
  * Configuration form.
@@ -38,27 +39,29 @@ function user_login_redirect_config_form($form, $form_state) {
   foreach ($roles as $key => $value) {
     $form['role_redirect_weigth_' . $key] = array(
       '#type' => 'weight',
-      '#title' => t('Weight for role '.  $value),
+      '#title' => t('Weight for role @role', array('@role' => $value)),
       '#default_value' => variable_get('role_redirect_weigth_' . $key, ''),
       '#description' => t('The lower weight, the more importance the role will have.'),
     );
     $form['role_redirect_path_' . $key] = array(
       '#type' => 'textfield',
-      '#title' => t('Redirect path for role ' . $value),
+      '#title' => t('Redirect path for role @role', array('@role' => $value)),
       '#default_value' => variable_get('role_redirect_path_' . $key, ''),
     );
   }
   return system_settings_form($form);
 }
 
-
+/**
+ * Validate for user_login_redirect_config_form.
+ */
 function user_login_redirect_config_form_validate($form, &$form_state) {
   $roles = user_roles(TRUE);
   $data = $form_state['input'];
-  foreach($roles as $key => $value){
+  foreach ($roles as $key => $value) {
     if (!empty($data['role_redirect_path_' . $key])) {
       if (!valid_url($data['role_redirect_path_' . $key])) {
-        form_set_error('role_redirect_path_' . $key, t('You must enter a relative path for the role ' . $value));
+        form_set_error('role_redirect_path_' . $key . '][', t('You must enter a relative path for the role @role', array('@role' => $value)));
       }
     }
   }
@@ -68,10 +71,10 @@ function user_login_redirect_config_form_validate($form, &$form_state) {
  * Implements hook_user_login().
  */
 function user_login_redirect_user_login(&$edit, $account) {
-  $wrapper = entity_metadata_wrapper('user', $account );
+  $wrapper = entity_metadata_wrapper('user', $account);
   $user_roles = $wrapper->roles->value();
   $roles_redirect = array();
-  foreach($user_roles as $rid){
+  foreach ($user_roles as $rid) {
     $roles_redirect[$rid] = array(
       'weight' => variable_get('role_redirect_weigth_' . $rid),
       'path' => variable_get('role_redirect_path_' . $rid, '<front>'),
