@@ -1,11 +1,17 @@
 <?php
 /**
  * @file
- * user_login_redirect.module
- * @author Rodrigo Espinoza Brenes <rodrigo@estudiomanati.com>
- * @author Dharizza Espinach Barahona <dharizza@estudiomanati.com>
+ * This file provides a Configuration form and redirect functionality
  */
-
+/**
+ * Implements hook_help().
+ */
+function user_login_redirect_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#user_login_redirect':
+      return '<p>' . t('This module provides redirects on login by role') . '</p>';
+  }
+}
 /**
  * Implements hook_menu().
  */
