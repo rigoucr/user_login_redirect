@@ -52,13 +52,19 @@ function user_login_redirect_config_form($form, $form_state) {
       $default_weight = $configured_roles[$key]->weight;
       $default_path = $configured_roles[$key]->path;
     }
-    $form['role_redirect_weight_' . $key] = array(
+    $form['roles_properties_fieldset_' . $key ] = array(
+      '#type' => 'fieldset',
+      '#title' => t('@role_name role', array('@role_name' => $value)),
+      '#collapsible' => TRUE,
+      '#colapsed' => FALSE,
+    );
+    $form['roles_properties_fieldset_' . $key ]['role_redirect_weight_' . $key] = array(
       '#type' => 'weight',
       '#title' => t('Weight for role @role', array('@role' => $value)),
       '#default_value' => $default_weight,
       '#description' => t('The lower weight, the more importance the role will have.'),
     );
-    $form['role_redirect_path_' . $key] = array(
+    $form['roles_properties_fieldset_' . $key ]['role_redirect_path_' . $key] = array(
       '#type' => 'textfield',
       '#title' => t('Redirect path for role @role', array('@role' => $value)),
       '#default_value' => $default_path,
