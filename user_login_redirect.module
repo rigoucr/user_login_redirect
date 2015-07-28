@@ -17,11 +17,12 @@ function user_login_redirect_help($path, $arg) {
  */
 function user_login_redirect_menu() {
   $items = array();
-  $items['admin/configure/user-login-redirect'] = array(
+  $items['admin/config/people/user-login-redirect'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_login_redirect_config_form'),
     'access callback' => 'user_access',
     'access arguments' => array('configure login redirect'),
+    'title' => t('User login redirect config'),
   );
   return $items;
 }
@@ -42,21 +43,113 @@ function user_login_redirect_permission() {
  * Configuration form.
  */
 function user_login_redirect_config_form($form, $form_state) {
+  $configured_roles = user_login_redirect_get_all_data();
   $roles = user_roles(TRUE);
   foreach ($roles as $key => $value) {
-    $form['role_redirect_weigth_' . $key] = array(
+    $default_weight = '';
+    $default_path = '';
+    if(!empty($configured_roles[$key])) {
+      $default_weight = $configured_roles[$key]->weight;
+      $default_path = $configured_roles[$key]->path;
+    }
+    $form['role_redirect_weight_' . $key] = array(
       '#type' => 'weight',
       '#title' => t('Weight for role @role', array('@role' => $value)),
-      '#default_value' => variable_get('role_redirect_weigth_' . $key, ''),
+      '#default_value' => $default_weight,
       '#description' => t('The lower weight, the more importance the role will have.'),
     );
     $form['role_redirect_path_' . $key] = array(
       '#type' => 'textfield',
       '#title' => t('Redirect path for role @role', array('@role' => $value)),
-      '#default_value' => variable_get('role_redirect_path_' . $key, ''),
+      '#default_value' => $default_path,
     );
   }
-  return system_settings_form($form);
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration'),
+  );
+  return $form;
+}
+/**
+ * User login redirect config form submit.
+ */
+function user_login_redirect_config_form_submit($form, &$form_state){
+  $roles = user_roles(TRUE);
+  foreach ($roles as $key => $value) {
+    if (!empty($form_state['values']['role_redirect_path_' . $key])) {
+      $redirect_data = user_login_redirect_get_data_by_rid($key);
+      if(empty($redirect_data)) {
+        $weight = check_plain($form_state['values']['role_redirect_weight_' . $key]);
+        $path = $form_state['values']['role_redirect_path_' . $key];
+        user_login_redirect_insert_data($key, $weight, $path);
+      }
+      elseif ($redirect_data['path'] != $form_state['values']['role_redirect_path_' . $key]
+      || $redirect_data['weight'] != $form_state['values']['role_redirect_weight_' . $key]) {
+        $weight = check_plain($form_state['values']['role_redirect_weight_' . $key]);
+        $path = $form_state['values']['role_redirect_path_' . $key];
+        user_login_redirect_update_data($key, $weight, $path);
+      }
+    }
+    else {
+      $redirect_data = user_login_redirect_get_data_by_rid($key);
+      if(!empty($redirect_data) && $redirect_data['path']) {
+        user_login_redirect_update_data_by_rid($key);
+      }
+    }
+  }
+}
+
+/**
+ * Retrive specific rid info.
+ */
+function  user_login_redirect_get_data_by_rid($rid) {
+  $query = db_select('user_login_redirect', 'u')
+  ->fields('u', array('path', 'weight'))
+  ->condition('rid', $rid, '=');
+  $result = $query->execute();
+  return $result->fetchAssoc();
+}
+/**
+ * Update specific rid info.
+ */
+function user_login_redirect_update_data ($rid, $weight, $path) {
+  $update = db_update('user_login_redirect')
+  ->fields(array(
+    'weight' => (int)$weight,
+    'path' => $path,
+  ))
+  ->condition('rid', $rid, '=')
+  ->execute();
+  return $update;
+}
+
+/**
+ * Delete specific rid info.
+ */
+function user_login_redirect_update_data_by_rid ($rid) {
+  $delete = db_delete('user_login_redirect')
+  ->condition('rid', $rid)
+  ->execute();
+  return $delete;
+}
+/**
+ * Insert Redirect Data.
+ */
+function user_login_redirect_insert_data($rid, $weight, $path) {
+  $insert = db_insert('user_login_redirect')
+  ->fields(array(
+    'rid' => $rid,
+    'weight' =>(int)$weight,
+    'path' => $path,
+  ))
+  ->execute();
+  return $insert;
+}
+function user_login_redirect_get_all_data() {
+  $query = db_select('user_login_redirect', 'u')
+  ->fields('u', array('rid', 'path', 'weight'));
+  $result = $query->execute();
+  return $result->fetchAllAssoc('rid');
 }
 
 /**
@@ -79,12 +172,19 @@ function user_login_redirect_config_form_validate($form, &$form_state) {
  */
 function user_login_redirect_user_login(&$edit, $account) {
   $wrapper = entity_metadata_wrapper('user', $account);
+  $configured_roles = user_login_redirect_get_all_data();
   $user_roles = $wrapper->roles->value();
   $roles_redirect = array();
   foreach ($user_roles as $rid) {
+    $rid_weight = '';
+    $rid_path = '';
+    if(!empty($configured_roles[$rid])) {
+      $rid_weight = $configured_roles[$rid]->weight;
+      $rid_path = $configured_roles[$rid]->path;
+    }
     $roles_redirect[$rid] = array(
-      'weight' => variable_get('role_redirect_weigth_' . $rid),
-      'path' => variable_get('role_redirect_path_' . $rid, '<front>'),
+      'weight' => $rid_weight,
+      'path' =>$rid_path,
     );
   }
   $role_weights = array();

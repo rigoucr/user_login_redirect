@@ -1,0 +1,39 @@
+<?php
+/**
+ * @file
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function user_login_redirect_schema() {
+  $schema['user_login_redirect'] = array(
+    'description' => '',
+    'fields' => array(
+      'rid' => array(
+        'description' => 'The role id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'path' => array(
+        'description' => 'The redirect path',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'weight' => array(
+        'description' => 'The weigth ',
+        'type' => 'int',
+        'unsigned' => FALSE,
+        'not null' => TRUE,
+      ),
+    ),
+    'unique keys' => array(
+      'rid' => array('rid')
+    ),
+    'primary key' => array('rid'),
+  );
+  return $schema;
+}
