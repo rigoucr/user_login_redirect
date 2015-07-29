@@ -21,11 +21,10 @@ function user_login_redirect_help($path, $arg) {
 function user_login_redirect_menu() {
   $items = array();
   $items['admin/config/people/user-login-redirect'] = array(
+    'title' => 'User login redirect config',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_login_redirect_config_form'),
-    'access callback' => 'user_access',
     'access arguments' => array('configure login redirect'),
-    'title' => t('User login redirect config'),
   );
   return $items;
 }
@@ -123,7 +122,7 @@ function  user_login_redirect_get_data_by_rid($rid) {
 /**
  * Update specific rid info.
  */
-function user_login_redirect_update_data ($rid, $weight, $path) {
+function user_login_redirect_update_data($rid, $weight, $path) {
   $update = db_update('user_login_redirect')
   ->fields(array(
     'weight' => (int)$weight,
@@ -137,7 +136,7 @@ function user_login_redirect_update_data ($rid, $weight, $path) {
 /**
  * Delete specific rid info.
  */
-function user_login_redirect_delete_data_by_rid ($rid) {
+function user_login_redirect_delete_data_by_rid($rid) {
   $delete = db_delete('user_login_redirect')
   ->condition('rid', $rid)
   ->execute();
