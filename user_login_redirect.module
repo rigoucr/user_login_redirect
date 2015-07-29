@@ -190,7 +190,7 @@ function user_login_redirect_get_all_data() {
  */
 function user_login_redirect_config_form_validate($form, &$form_state) {
   $roles = user_roles(TRUE);
-  $data = $form_state['input'];
+  $data = $form_state['values'];
   foreach ($roles as $key => $value) {
     if (!empty($data['role_redirect_path_' . $key])) {
       if (!valid_url($data['role_redirect_path_' . $key])) {
