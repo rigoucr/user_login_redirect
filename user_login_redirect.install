@@ -30,9 +30,6 @@ function user_login_redirect_schema() {
         'not null' => TRUE,
       ),
     ),
-    'unique keys' => array(
-      'rid' => array('rid')
-    ),
     'primary key' => array('rid'),
   );
   return $schema;
