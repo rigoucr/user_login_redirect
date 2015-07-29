@@ -182,16 +182,12 @@ function user_login_redirect_user_login(&$edit, $account) {
   $user_roles = $wrapper->roles->value();
   $roles_redirect = array();
   foreach ($user_roles as $rid) {
-    $rid_weight = '';
-    $rid_path = '';
     if(!empty($configured_roles[$rid])) {
-      $rid_weight = $configured_roles[$rid]->weight;
-      $rid_path = $configured_roles[$rid]->path;
+      $roles_redirect[$rid] = array(
+        'weight' => $configured_roles[$rid]->weight,
+        'path' => $configured_roles[$rid]->path,
+      );
     }
-    $roles_redirect[$rid] = array(
-      'weight' => $rid_weight,
-      'path' =>$rid_path,
-    );
   }
   $role_weights = array();
   foreach ($roles_redirect as $role) {
