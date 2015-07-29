@@ -90,19 +90,37 @@ function user_login_redirect_config_form_submit($form, &$form_state){
       if(empty($redirect_data)) {
         $weight = check_plain($form_state['values']['role_redirect_weight_' . $key]);
         $path = $form_state['values']['role_redirect_path_' . $key];
-        user_login_redirect_insert_data($key, $weight, $path);
+        $result = user_login_redirect_insert_data($key, $weight, $path);
+        if (!is_null($result)) {
+          drupal_set_message(t('The configuration for the role "@role" has been saved.', array('@role' => $value)));
+        }
+        else {
+          drupal_set_message(t('There was an error and the configuration of the role "@role" could not be saved.', array('@role' => $value)), 'error');
+        }
       }
       elseif ($redirect_data['path'] != $form_state['values']['role_redirect_path_' . $key]
       || $redirect_data['weight'] != $form_state['values']['role_redirect_weight_' . $key]) {
         $weight = check_plain($form_state['values']['role_redirect_weight_' . $key]);
         $path = $form_state['values']['role_redirect_path_' . $key];
-        user_login_redirect_update_data($key, $weight, $path);
+        $result = user_login_redirect_update_data($key, $weight, $path);
+        if ($result) {
+          drupal_set_message(t('The configuration of the role "@role" has been updated correctly.', array('@role' => $value)));
+        }
+        else {
+          drupal_set_message(t('There was an error during the update, the configuration of the role "@role" could not be saved.', array('@role' => $value)), 'error');
+        }
       }
     }
     else {
       $redirect_data = user_login_redirect_get_data_by_rid($key);
       if(!empty($redirect_data) && $redirect_data['path']) {
-        user_login_redirect_delete_data_by_rid($key);
+        $result = user_login_redirect_delete_data_by_rid($key);
+        if ($result) {
+          drupal_set_message(t('The configuration of the role "@role" has been deleted .', array('@role' => $value)));
+        }
+        else {
+          drupal_set_message(t('The configuration of the role "@role" could not be deleted.', array('@role' => $value)), 'error');
+        }
       }
     }
   }
