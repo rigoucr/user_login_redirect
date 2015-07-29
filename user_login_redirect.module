@@ -103,7 +103,7 @@ function user_login_redirect_config_form_submit($form, &$form_state){
     else {
       $redirect_data = user_login_redirect_get_data_by_rid($key);
       if(!empty($redirect_data) && $redirect_data['path']) {
-        user_login_redirect_update_data_by_rid($key);
+        user_login_redirect_delete_data_by_rid($key);
       }
     }
   }
@@ -137,12 +137,13 @@ function user_login_redirect_update_data ($rid, $weight, $path) {
 /**
  * Delete specific rid info.
  */
-function user_login_redirect_update_data_by_rid ($rid) {
+function user_login_redirect_delete_data_by_rid ($rid) {
   $delete = db_delete('user_login_redirect')
   ->condition('rid', $rid)
   ->execute();
   return $delete;
 }
+
 /**
  * Insert Redirect Data.
  */
@@ -156,6 +157,10 @@ function user_login_redirect_insert_data($rid, $weight, $path) {
   ->execute();
   return $insert;
 }
+
+/**
+ * Return all roles redirect info.
+ */
 function user_login_redirect_get_all_data() {
   $query = db_select('user_login_redirect', 'u')
   ->fields('u', array('rid', 'path', 'weight'));
